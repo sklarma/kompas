@@ -63,6 +63,7 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
+            transition: transform 0.1s ease-out;
         }
 
         .compass-needle {
@@ -75,9 +76,7 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            transform: translateX(-50%) rotateZ(0deg);
-            transform-origin: center 140px;
-            transition: transform 0.1s ease-out;
+            transform: translateX(-50%);
             z-index: 10;
         }
 
@@ -131,6 +130,22 @@
             background: #e8f5e9;
             color: #2e7d32;
         }
+
+        .permission-button {
+            background: #1e88e5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0 20px;
+        }
+
+        .permission-button:active {
+            background: #1565c0;
+        }
     </style>
 </head>
 <body>
@@ -172,6 +187,10 @@
                         <span class="info-value" id="cardinal">-</span>
                     </div>
                 </ion-card>
+
+                <button class="permission-button" id="permissionBtn" onclick="window.compass.requestSensorPermission()">
+                    Povolit senzor orientace
+                </button>
 
                 <div class="status" id="status">Inicializuji senzory...</div>
             </div>
@@ -231,22 +250,46 @@
 
             startCompass() {
                 if ('DeviceOrientationEvent' in window) {
+                    // Check if on iOS 13+
                     if (typeof DeviceOrientationEvent !== 'undefined' && 
                         typeof DeviceOrientationEvent.requestPermission === 'function') {
-                        DeviceOrientationEvent.requestPermission()
-                            .then((permission) => {
-                                if (permission === 'granted') {
-                                    this.attachCompassListener();
-                                }
-                            })
-                            .catch(() => {
-                                this.updateStatus('Senzor orientace - povolení zamítnuto', 'error');
-                            });
+                        // iOS - vyžaduje explicitní povolení na kliknutí
+                        this.updateStatus('Klikni na "Povolit senzor orientace"', 'error');
                     } else {
+                        // Android a ostatní - automaticky
                         this.attachCompassListener();
+                        this.hidePermissionButton();
                     }
                 } else {
                     this.updateStatus('Device Orientation Event není dostupná', 'error');
+                }
+            }
+
+            requestSensorPermission() {
+                if (typeof DeviceOrientationEvent !== 'undefined' && 
+                    typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission()
+                        .then((permission) => {
+                            if (permission === 'granted') {
+                                this.attachCompassListener();
+                                this.hidePermissionButton();
+                            }
+                        })
+                        .catch((err) => {
+                            console.error('Permission error:', err);
+                            this.updateStatus('Povolení zamítnuto', 'error');
+                        });
+                } else {
+                    // Android - nemá requestPermission
+                    this.attachCompassListener();
+                    this.hidePermissionButton();
+                }
+            }
+
+            hidePermissionButton() {
+                const btn = document.getElementById('permissionBtn');
+                if (btn) {
+                    btn.style.display = 'none';
                 }
             }
 
@@ -258,13 +301,16 @@
                         heading = ((heading % 360) + 360) % 360;
                         heading = this.smoothHeading(heading);
 
-                        document.getElementById('needle').style.transform = 
-                            `translateX(-50%) rotateZ(${heading}deg)`;
+                        // Otočit obrázek kompasu
+                        const compassImage = document.querySelector('.compass-image');
+                        if (compassImage) {
+                            compassImage.style.transform = `rotateZ(${heading}deg)`;
+                        }
 
                         document.getElementById('heading').textContent = Math.round(heading) + '°';
                         document.getElementById('cardinal').textContent = this.getCardinal(heading);
                         
-                        this.updateStatus('Kompas připojen', 'success');
+                        this.updateStatus('Kompas připojen ✓', 'success');
                     }
                 });
             }

@@ -205,6 +205,7 @@
         class Compass {
             constructor() {
                 this.previousHeading = 0;
+                this.initialHeading = null;  // Uložíme si počáteční heading
                 this.geoWatch = null;
                 this.init();
             }
@@ -333,12 +334,22 @@
                             heading = 360 + heading;
                         }
                         heading = ((heading % 360) + 360) % 360;
+                        
+                        // Zapamatuj si první heading
+                        if (this.initialHeading === null) {
+                            this.initialHeading = heading;
+                            console.log('Initial heading uložen:', this.initialHeading);
+                        }
+                        
+                        // Odečti počáteční heading aby se sever nastavil správně
+                        heading = (heading - this.initialHeading + 360) % 360;
+                        
                         heading = this.smoothHeading(heading);
 
                         // Otočit obrázek kompasu
                         const compassImage = document.querySelector('.compass-image');
                         if (compassImage) {
-                            compassImage.style.transform = `rotateZ(-${heading}deg)`;
+                            compassImage.style.transform = `rotateZ(${heading}deg)`;
                         }
 
                         document.getElementById('heading').textContent = Math.round(heading) + '°';

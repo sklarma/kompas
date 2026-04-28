@@ -205,7 +205,6 @@
         class Compass {
             constructor() {
                 this.previousHeading = 0;
-                this.initialHeading = null;  // Uložíme si počáteční heading
                 this.geoWatch = null;
                 this.init();
             }
@@ -312,41 +311,64 @@
             }
 
             attachCompassListener() {
-                console.log('Registruji deviceorientation listener...');
+                console.log('Registruji deviceorientation listener (absolute)...');
                 
                 let eventCount = 0;
+                let hasAbsoluteEvent = false;
                 
-                window.addEventListener('deviceorientation', (event) => {
+                // Zkus DeviceOrientationAbsoluteEvent (vrací magnetický heading)
+                window.addEventListener('deviceorientationabsolute', (event) => {
+                    hasAbsoluteEvent = true;
                     eventCount++;
-                    const alpha = event.alpha;
-                    const beta = event.beta;
-                    const gamma = event.gamma;
+                    const alpha = event.alpha; // Magnetický heading od severu
                     
-                    // Loguj jen prvních 5 eventů
-                    if (eventCount <= 5) {
-                        console.log(`Event ${eventCount}: alpha=${alpha}, beta=${beta}, gamma=${gamma}`);
+                    if (eventCount <= 2) {
+                        console.log(`Absolute Event ${eventCount}: alpha=${alpha}`);
                     }
                     
                     if (alpha !== null) {
-                        // Normalizuj heading na 0-360
+                        // Alpha je již magnetický heading (0 = magnetický sever)
                         let heading = alpha;
                         if (heading < 0) {
                             heading = 360 + heading;
                         }
                         heading = ((heading % 360) + 360) % 360;
-                        
-                        // Zapamatuj si první heading
-                        if (this.initialHeading === null) {
-                            this.initialHeading = heading;
-                            console.log('Initial heading uložen:', this.initialHeading);
-                        }
-                        
-                        // Odečti počáteční heading aby se sever nastavil správně
-                        heading = (heading - this.initialHeading + 360) % 360;
-                        
                         heading = this.smoothHeading(heading);
 
                         // Otočit obrázek kompasu
+                        const compassImage = document.querySelector('.compass-image');
+                        if (compassImage) {
+                            compassImage.style.transform = `rotateZ(${heading}deg)`;
+                        }
+
+                        document.getElementById('heading').textContent = Math.round(heading) + '°';
+                        document.getElementById('cardinal').textContent = this.getCardinal(heading);
+                        
+                        if (eventCount === 1) {
+                            this.updateStatus('Kompas připojen (absolutní) ✓', 'success');
+                        }
+                    }
+                });
+                
+                // Fallback: Pokud deviceorientationabsolute není dostupný, zkus normální deviceorientation
+                window.addEventListener('deviceorientation', (event) => {
+                    if (hasAbsoluteEvent) return; // Ignoruj pokud máme absolutní
+                    
+                    eventCount++;
+                    const alpha = event.alpha;
+                    
+                    if (eventCount <= 2) {
+                        console.log(`Fallback Event ${eventCount}: alpha=${alpha}`);
+                    }
+                    
+                    if (alpha !== null) {
+                        let heading = alpha;
+                        if (heading < 0) {
+                            heading = 360 + heading;
+                        }
+                        heading = ((heading % 360) + 360) % 360;
+                        heading = this.smoothHeading(heading);
+
                         const compassImage = document.querySelector('.compass-image');
                         if (compassImage) {
                             compassImage.style.transform = `rotateZ(${heading}deg)`;
@@ -361,7 +383,7 @@
                     }
                 });
                 
-                console.log('Listener registrován!');
+                console.log('Listeners registrovány!');
             }
 
             smoothHeading(newHeading) {

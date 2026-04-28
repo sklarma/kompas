@@ -278,26 +278,32 @@
                 
                 if (typeof DeviceOrientationEvent !== 'undefined' && 
                     typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    console.log('Žádám o povolení...');
+                    console.log('iOS detekován - žádám o povolení pro Device Orientation a Motion');
                     
-                    DeviceOrientationEvent.requestPermission()
-                        .then((permission) => {
-                            console.log('Permission result:', permission);
-                            if (permission === 'granted') {
-                                console.log('Povolení uděleno!');
-                                this.attachCompassListener();
-                                this.hidePermissionButton();
-                            } else {
-                                console.log('Povolení zamítnuto');
-                                this.updateStatus('Povolení zamítnuto', 'error');
-                            }
-                        })
-                        .catch((err) => {
-                            console.error('Permission error:', err);
-                            this.updateStatus('Chyba: ' + err.message, 'error');
-                        });
+                    // iOS 13+ - musí se požádat o oba
+                    Promise.all([
+                        DeviceOrientationEvent.requestPermission(),
+                        DeviceMotionEvent.requestPermission() // Druhé povolení!
+                    ])
+                    .then(([orientationPerm, motionPerm]) => {
+                        console.log('Orientation permission:', orientationPerm);
+                        console.log('Motion permission:', motionPerm);
+                        
+                        if (orientationPerm === 'granted' || motionPerm === 'granted') {
+                            console.log('Povolení uděleno!');
+                            this.attachCompassListener();
+                            this.hidePermissionButton();
+                        } else {
+                            console.log('Povolení zamítnuto');
+                            this.updateStatus('Povolení zamítnuto', 'error');
+                        }
+                    })
+                    .catch((err) => {
+                        console.error('Permission error:', err);
+                        this.updateStatus('Chyba: ' + err.message, 'error');
+                    });
                 } else {
-                    console.log('requestPermission není dostupná - spouštím listener přímo');
+                    console.log('Android/ostatní - spouštím listener přímo');
                     this.attachCompassListener();
                     this.hidePermissionButton();
                 }

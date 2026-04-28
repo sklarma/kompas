@@ -358,6 +358,7 @@
                             compassImage.style.transform = `rotateZ(-${this.previousHeadingContinuous}deg)`;
                         }
 
+                        
                         // Pro display normalizuj na 0-360
                         const normalizedHeading = ((this.previousHeadingContinuous % 360) + 360) % 360;
                         document.getElementById('heading').textContent = Math.round(normalizedHeading) + '°';

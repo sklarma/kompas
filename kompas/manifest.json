@@ -1,0 +1,32 @@
+{
+  "name": "Aplikace Kompas",
+  "short_name": "Kompas",
+  "description": "Zobrazení polohy, nadmořské výšky a směru natočení telefonu",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#1e88e5",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "komponenty/AppIcon-512@2x.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "komponenty/AppIcon-512@2x.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "komponenty/compass3.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
+  ]
+}

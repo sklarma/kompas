@@ -355,7 +355,7 @@
                         // Otočit obrázek kompasu - použij continuousHeading pro plynulou rotaci
                         const compassImage = document.querySelector('.compass-image');
                         if (compassImage) {
-                            compassImage.style.transform = `rotateZ(${this.previousHeadingContinuous}deg)`;
+                            compassImage.style.transform = `rotateZ(-${this.previousHeadingContinuous}deg)`;
                         }
 
                         // Pro display normalizuj na 0-360

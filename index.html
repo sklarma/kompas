@@ -273,21 +273,30 @@
             }
 
             requestSensorPermission() {
+                console.log('requestSensorPermission volano');
+                
                 if (typeof DeviceOrientationEvent !== 'undefined' && 
                     typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    console.log('Žádám o povolení...');
+                    
                     DeviceOrientationEvent.requestPermission()
                         .then((permission) => {
+                            console.log('Permission result:', permission);
                             if (permission === 'granted') {
+                                console.log('Povolení uděleno!');
                                 this.attachCompassListener();
                                 this.hidePermissionButton();
+                            } else {
+                                console.log('Povolení zamítnuto');
+                                this.updateStatus('Povolení zamítnuto', 'error');
                             }
                         })
                         .catch((err) => {
                             console.error('Permission error:', err);
-                            this.updateStatus('Povolení zamítnuto', 'error');
+                            this.updateStatus('Chyba: ' + err.message, 'error');
                         });
                 } else {
-                    // Android - nemá requestPermission
+                    console.log('requestPermission není dostupná - spouštím listener přímo');
                     this.attachCompassListener();
                     this.hidePermissionButton();
                 }

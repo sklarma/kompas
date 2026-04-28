@@ -183,6 +183,14 @@
                         <span class="info-value" id="heading">-</span>
                     </div>
                     <div class="info-item">
+                        <span class="info-label">Debug (alpha):</span>
+                        <span class="info-value" id="debug-alpha">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Debug (event type):</span>
+                        <span class="info-value" id="debug-type">-</span>
+                    </div>
+                    <div class="info-item">
                         <span class="info-label">Směr (světové strany):</span>
                         <span class="info-value" id="cardinal">-</span>
                     </div>
@@ -328,18 +336,19 @@
                     eventCount++;
                     const alpha = event.alpha; // Magnetický heading od severu
                     
-                    if (eventCount <= 2) {
-                        console.log(`Absolute Event ${eventCount}: alpha=${alpha}`);
-                    }
+                    console.log(`Absolute Event ${eventCount}: alpha=${alpha}`);
                     
                     if (alpha !== null) {
-                        // Alpha je již magnetický heading (0 = magnetický sever)
                         let heading = alpha;
                         if (heading < 0) {
                             heading = 360 + heading;
                         }
                         heading = ((heading % 360) + 360) % 360;
                         heading = this.smoothHeading(heading);
+
+                        // Debug output
+                        document.getElementById('debug-alpha').textContent = alpha.toFixed(2);
+                        document.getElementById('debug-type').textContent = 'Absolute';
 
                         // Otočit obrázek kompasu
                         const compassImage = document.querySelector('.compass-image');
@@ -363,9 +372,7 @@
                     eventCount++;
                     const alpha = event.alpha;
                     
-                    if (eventCount <= 2) {
-                        console.log(`Fallback Event ${eventCount}: alpha=${alpha}`);
-                    }
+                    console.log(`Fallback Event ${eventCount}: alpha=${alpha}`);
                     
                     if (alpha !== null) {
                         let heading = alpha;
@@ -374,6 +381,10 @@
                         }
                         heading = ((heading % 360) + 360) % 360;
                         heading = this.smoothHeading(heading);
+
+                        // Debug output
+                        document.getElementById('debug-alpha').textContent = alpha.toFixed(2);
+                        document.getElementById('debug-type').textContent = 'Fallback';
 
                         const compassImage = document.querySelector('.compass-image');
                         if (compassImage) {
@@ -395,6 +406,10 @@
             smoothHeading(newHeading) {
                 let targetHeading = newHeading;
                 
+                // Normalizuj do 0-360
+                targetHeading = ((targetHeading % 360) + 360) % 360;
+                
+                // Vyhneme se skokům na hranici 0/360°
                 while (targetHeading - this.previousHeading > 180) {
                     targetHeading -= 360;
                 }
@@ -403,7 +418,9 @@
                 }
                 
                 this.previousHeading = targetHeading;
-                return targetHeading;
+                
+                // Vrátíme normalizované číslo do 0-360
+                return ((targetHeading % 360) + 360) % 360;
             }
 
             degreesToDMS(degrees, isLatitude) {

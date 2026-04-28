@@ -313,25 +313,40 @@
             attachCompassListener() {
                 console.log('Registruji deviceorientation listener...');
                 
+                let eventCount = 0;
+                
                 window.addEventListener('deviceorientation', (event) => {
-                    console.log('Deviceorientation event:', event.alpha, event.beta, event.gamma);
+                    eventCount++;
+                    const alpha = event.alpha;
+                    const beta = event.beta;
+                    const gamma = event.gamma;
                     
-                    let heading = event.alpha;
-
-                    if (heading !== null) {
+                    // Loguj jen prvních 5 eventů
+                    if (eventCount <= 5) {
+                        console.log(`Event ${eventCount}: alpha=${alpha}, beta=${beta}, gamma=${gamma}`);
+                    }
+                    
+                    if (alpha !== null) {
+                        // Normalizuj heading na 0-360
+                        let heading = alpha;
+                        if (heading < 0) {
+                            heading = 360 + heading;
+                        }
                         heading = ((heading % 360) + 360) % 360;
                         heading = this.smoothHeading(heading);
 
                         // Otočit obrázek kompasu
                         const compassImage = document.querySelector('.compass-image');
                         if (compassImage) {
-                            compassImage.style.transform = `rotateZ(${heading}deg)`;
+                            compassImage.style.transform = `rotateZ(-${heading}deg)`;
                         }
 
                         document.getElementById('heading').textContent = Math.round(heading) + '°';
                         document.getElementById('cardinal').textContent = this.getCardinal(heading);
                         
-                        this.updateStatus('Kompas připojen ✓', 'success');
+                        if (eventCount === 1) {
+                            this.updateStatus('Kompas připojen ✓', 'success');
+                        }
                     }
                 });
                 
